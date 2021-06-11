@@ -1,0 +1,220 @@
+Tài liệu:
++++++++++++++++   TaskList   +++++++++++++++
+- Có 2 state là: 
+this.state = {
+      filterName: '', --> Lọc theo tên
+      filterStatus: -1, --> Lọc theo trạng thái
+}
+- 1 hàm bind
+this.onChange = this.onChange.bind(this);
+
+Trong hàm onChange:
+Lấy ra các đối tượng ô input -> Lấy ra name của các ô input -> Lấy ra giá trị của các ô input -> this.props.onFilter(
+      // Truyền 2 tham số ra ngoài (truyền đến hàm onFilter của TaskList bên App.js)
+      name === 'filterName' ? value : this.state.filterName,
+      name === 'filterStatus' ? value : this.state.filterStatus,
+) ->    this.setState({[name]: value}); 
+
+Trong render:
+- Nhận về props tasks từ component cha --> var {tasks} = this.props; --> //Vì ta để props trong <TaskList/> bên App.js là tasks thì ở đây ta phải gọi ra
+- Gọi 2 state khai báo ở trên --> var { filterName,filterStatus } = this.state;
+- Tạo ra 1 biến elmTasks để hiển thị ra các nhiệm vụ (TaskItem)
+    var elmTasks = tasks.map((task,index) => {
+      return <TaskItem
+                key={task.id}
+                index={index}
+                task={task}
+                onUpdateStatus = {this.props.onUpdateStatus} //Vì trong TaskList bên App.js có truyền vào props onUpdateStatus nên bên TaskList.js có thể gọi ra
+                onDelete = {this.props.onDelete} 	     //Vì trong TaskList bên App.js có truyền vào props onDelete nên bên TaskList.js có thể gọi ra
+                onUpdate = {this.props.onUpdate}             //Vì trong TaskList bên App.js có truyền vào props onUpdate nên bên TaskList.js có thể gọi ra
+             />
+    });
+- Trong thẻ input lọc theo tên phải có value = { filterName } onChange={this.onChange
+- Trong thẻ select lọc theo trạng thái phải có value = { filterStatus } onChange={this.onChange} và trong các option phải có value={với các giá trị -1,0,1}
+- Nhớ gọi thẻ elmTasks ra
+
++++++++++++++++   TaskItem   +++++++++++++++
+  onUpdateStatus = () => {
+    this.props.onUpdateStatus(this.props.task.id); //Lấy ra id truyền qua TaskList sau đó từ TaskList truyền qua App
+    //TaskList là cha của TaskItem mà props của TaskList là onUpdateStatus nên ở đây ta cũng phải dùng onUpdateStatus
+  };
+
+  onDelete = () => {
+    this.props.onDelete(this.props.task.id); //Lấy ra id truyền qua TaskList sau đó từ TaskList truyền qua App
+    //TaskList là cha của TaskItem mà props của TaskList là onDelete nên ở đây ta cũng phải dùng onDelete
+  };
+
+  onUpdate = () => {
+    this.props.onUpdate(this.props.task.id); //Lấy ra id truyền qua TaskList sau đó từ TaskList truyền qua App
+    //TaskList là cha của TaskItem mà props của TaskList là onUpdate nên ở đây ta cũng phải dùng onUpdate
+  };
+
+Trong render:
+- Nhận về props task, index từ component cha --> var {task, index} = this.props; --> //Vì ta để props trong <TaskItem/> bên TaskList.js là tasks và index thì ở đây ta phải gọi ra
+- Trong bước hiển thị     
+	<td>{index + 1}</td>
+        <td>{task.name}</td>
+        <td className="text-center">
+          <span
+            className={
+              task.status === true
+                ? "label label-success"
+                : "label label-danger"
+            }
+            onClick={this.onUpdateStatus}
+          >
+            {task.status === true ? "Kích hoạt" : "Ẩn"}
+          </span>
+        </td>
+        <td className="text-center">
+          <button
+            type="button"
+            className="btn btn-warning"
+            onClick={this.onUpdate}
+          >
+            <span className="fa fa-pencil mr-5" />
+            Sửa
+          </button>
+          &nbsp;
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={this.onDelete}
+          >
+            <span className="fa fa-trash mr-5" />
+            Xóa
+          </button>
+        </td>
+      </tr>
+
++++++++++++++++   TaskForm   +++++++++++++++
+- Có 3 state là: 
+this.state = {
+      id: "",
+      name: "",
+      status: false,
+}
+
+ // Gọi mỗi lần refresh trang web
+componentWillMount() {
+    // Vì TaskForm bên App.js truyền props là task nên bên TaskForm.js phải gọi props là task
+    if (this.props.task) {
+      this.setState({
+        id: this.props.task.id,
+        name: this.props.task.name,
+        status: this.props.task.status,
+      });
+      console.log(this.state);
+    }
+  }
+
+componentWillReceiveProps(nextProps) {
+    // Vì TaskForm bên App.js truyền props là task nên bên TaskForm.js phải gọi props là task
+    if (nextProps && nextProps.task) {
+      this.setState({
+        id: nextProps.task.id,
+        name: nextProps.task.name,
+        status: nextProps.task.status,
+      });
+    } else if (nextProps && nextProps.task === null) {
+      // console.log('Sửa thành thêm');
+      this.setState({
+        id: "",
+        name: "",
+        status: false,
+      });
+    }
+  }
+
+// Arrow Function
+  onCloseForm = () => {
+    // onCloseForm này chính là props ta nhận từ bên thằng <TaskForm/> bên App.js
+    this.props.onCloseForm();
+  };
+
+  onChange = (e) => {
+    // Lấy ra các đối tượng ô input
+    var target = e.target;
+    // Lấy ra name của các ô input
+    var name = target.name;
+    // Lấy ra giá trị của các ô input
+    var value = target.value;
+    if (name === "status") {
+      value = target.value === "true" ? true : false; //Ép kiểu string về boolean
+    }
+    this.setState({
+      [name]: value,
+    });
+  };
+
+  onSubmit = (e) => {
+    // Ngăn chặn load lại trang
+    e.preventDefault();
+    // onSubmit này chính là props ta nhận từ bên thằng <TaskForm/> bên App.js
+    this.props.onSubmit(this.state);
+    // Khi submit form tiến hành truyền state này ra ngoài để bên thằng <TaskForm/> bên App.js nhận được
+    // Sau khi lưu lại thì reset các ô input và đóng form thêm
+    this.onClear();
+    this.onCloseForm();
+  };
+
+  onClear = () => {
+    this.setState({
+      name: "",
+      status: false,
+    });
+  };
+
+  render() {
+    var { id } = this.state;
+    return (
+      <div className="panel panel-warning">
+        <div className="panel-heading">
+          <h3 className="panel-title">
+            {id !== "" ? "Cập nhật công việc" : "Thêm Công Việc"}
+            <span
+              className="fa fa-times-circle text-right"
+              onClick={this.onCloseForm}
+            ></span>
+          </h3>
+        </div>
+        <div className="panel-body">
+          <form onSubmit={this.onSubmit}>
+            <div className="form-group">
+              <label>Tên :</label>
+              <input
+                type="text"
+                className="form-control"
+                name="name"
+                value={this.state.name}
+                onChange={this.onChange}
+              />
+            </div>
+            <label>Trạng Thái :</label>
+            <select
+              className="form-control"
+              required="required"
+              name="status"
+              value={this.state.status}
+              onChange={this.onChange}
+            >
+              <option value={true}>Kích Hoạt</option>
+              <option value={false}>Ẩn</option>
+            </select>
+            <br />
+            <div className="text-center">
+              <button type="submit" className="btn btn-warning">
+                <span className="fa fa-plus mr-5"></span>Lưu Lại
+              </button>
+              &nbsp;
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={this.onClear}
+              >
+                <span className="fa fa-close mr-5"></span>Hủy Bỏ
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
